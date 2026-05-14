@@ -1,0 +1,2 @@
+# proyecto_inbiotica
+PROYECTO_INNBIOTICA
