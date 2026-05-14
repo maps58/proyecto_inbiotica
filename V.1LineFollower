@@ -1,1 +1,216 @@
+/*
+--------------------------------------------------------
+   ROBOT SEGUIDOR DE LINEA
+--------------------------------------------------------
+   VERSION CORREGIDA Y OPTIMIZADA
+--------------------------------------------------------
+*/
 
+// =====================================================
+// SENSORES IR
+// =====================================================
+
+int sensores[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
+
+int valores[8];
+
+// Umbral de detección
+// Ajustar según calibración real
+int umbral = 500;
+
+
+// =====================================================
+// DRIVER L298N
+// =====================================================
+
+// Motor izquierdo
+int IN1 = 4;
+int IN2 = 5;
+int ENA = 3;
+
+// Motor derecho
+int IN3 = 9;
+int IN4 = 7;
+int ENB = 6;
+
+
+// =====================================================
+// VARIABLES DE CONTROL
+// =====================================================
+
+int velocidadBase = 170;
+int velocidadGiro = 220;
+
+
+// =====================================================
+// CONFIGURACION
+// =====================================================
+
+void setup() {
+
+  Serial.begin(9600);
+
+  // Pines motores
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  pinMode(ENA, OUTPUT);
+  pinMode(ENB, OUTPUT);
+
+  // Sensores
+  for (int i = 0; i < 8; i++) {
+    pinMode(sensores[i], INPUT);
+  }
+
+  Serial.println("Robot iniciado...");
+}
+
+
+// =====================================================
+// LOOP PRINCIPAL
+// =====================================================
+
+void loop() {
+
+  // -------------------------------------------
+  // LECTURA DE SENSORES
+  // -------------------------------------------
+
+  for (int i = 0; i < 8; i++) {
+
+    int lectura = analogRead(sensores[i]);
+
+    // Conversión analógico -> binario
+    if (lectura < umbral) {
+      valores[i] = 1;
+    }
+    else {
+      valores[i] = 0;
+    }
+
+    Serial.print(valores[i]);
+    Serial.print(" ");
+  }
+
+  Serial.println();
+
+  // -------------------------------------------
+  // CALCULO DE ZONAS
+  // -------------------------------------------
+
+  int izquierda =
+    valores[0] +
+    valores[1] +
+    valores[2] +
+    valores[3];
+
+  int derecha =
+    valores[4] +
+    valores[5] +
+    valores[6] +
+    valores[7];
+
+  // -------------------------------------------
+  // CONTROL DE MOVIMIENTO
+  // -------------------------------------------
+
+  // Línea centrada
+  if (izquierda == derecha) {
+
+    avanzar();
+  }
+
+  // Línea desplazada a la izquierda
+  else if (izquierda > derecha) {
+
+    girarIzquierda();
+  }
+
+  // Línea desplazada a la derecha
+  else if (derecha > izquierda) {
+
+    girarDerecha();
+  }
+
+  delay(15);
+}
+
+
+// =====================================================
+// FUNCIONES DE MOVIMIENTO
+// =====================================================
+
+
+// -------------------------------------------
+// AVANZAR
+// -------------------------------------------
+
+void avanzar() {
+
+  // Motor izquierdo adelante
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  // Motor derecho adelante
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  analogWrite(ENA, velocidadBase);
+  analogWrite(ENB, velocidadBase);
+}
+
+
+// -------------------------------------------
+// GIRAR IZQUIERDA
+// -------------------------------------------
+
+void girarIzquierda() {
+
+  // Ambos motores adelante
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  // Reducir velocidad izquierda
+  analogWrite(ENA, 90);
+
+  // Incrementar velocidad derecha
+  analogWrite(ENB, velocidadGiro);
+}
+
+
+// -------------------------------------------
+// GIRAR DERECHA
+// -------------------------------------------
+
+void girarDerecha() {
+
+  // Ambos motores adelante
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  // Incrementar velocidad izquierda
+  analogWrite(ENA, velocidadGiro);
+
+  // Reducir velocidad derecha
+  analogWrite(ENB, 90);
+}
+
+
+// -------------------------------------------
+// DETENER
+// -------------------------------------------
+
+void detener() {
+
+  analogWrite(ENA, 0);
+  analogWrite(ENB, 0);
+}
